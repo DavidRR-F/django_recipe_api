@@ -1,0 +1,36 @@
+FROM python:3.9-alpine3.13
+# image maintainer info
+LABEL maintainer="David Rose-Franklin"
+# recommended when running python in docker
+ENV PYTHONUNBUFFERED 1
+
+COPY ./requirements.txt /tmp/requirements.txt
+COPY ./requirements.dev.txt /tmp/requirements.dev.txt
+COPY ./app /app
+
+WORKDIR /app
+
+EXPOSE 8000
+# Creates venv, Upgrade pip, Install Requirements, 
+# If dev true add dev requirements
+# remove tmp dir (Keeps image lightweight), 
+# Add user in image (Best Practice to not use root user)
+# Don't create home or password and specify name "django-user"
+ARG DEV=false
+RUN python -m venv /py && \
+    /py/bin/pip install --upgrade pip && \
+    /py/bin/pip install -r /tmp/requirements.txt && \
+    if [ $DEV = "true" ]; \
+        then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
+    fi && \
+    rm -rf /tmp && \
+    adduser \
+        --disabled-password \
+        --no-create-home \
+        django-user
+# Updates path enviroment variable so python commands dont need path extension
+ENV PATH="/py/bin:$PATH"
+
+# Switch to new user
+USER django-user
+
