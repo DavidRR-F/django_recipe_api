@@ -1,9 +1,15 @@
-from rest_framework import viewsets
+from rest_framework import (
+    viewsets,
+    mixins
+)
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+# from rest_framework.exceptions import PermissionDenied
 
-from core.models import Recipe
+from core.models import (
+    Recipe,
+    Tag
+)
 from recipe import serializers
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -11,15 +17,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RecipeDetailSerializer
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication]
-    permissions_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return self.queryset.filter(user=self.request.user).order_by('-id')
-        else:
-            raise PermissionDenied(
-                detail='Authentication credentials were not provided.'
-            )
+        # if self.request.user.is_authenticated:
+        return self.queryset.filter(user=self.request.user).order_by('-id')
+        # else:
+        #     raise PermissionDenied(
+        #         detail='Authentication credentials were not provided.'
+        #     )
             
     def get_serializer_class(self):
         """Return the serializer class for request"""
@@ -31,4 +37,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Create a new recipe"""
         serializer.save(user=self.request.user)
     
+class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """Manage Tags in Database"""
+    serializer_class = serializers.TagSerializer
+    queryset = Tag.objects.all()
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     
+    def get_queryset(self):
+        """Filter queryset by authenticated user"""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
