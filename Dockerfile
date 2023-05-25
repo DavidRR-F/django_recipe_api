@@ -16,6 +16,8 @@ EXPOSE 8000
 # remove tmp dir (Keeps image lightweight), 
 # Add user in image (Best Practice to not use root user)
 # Don't create home or password and specify name "django-user"
+# install image handling dependecies zlib and jpeg-dev
+# create media directory, change owner, and permissions of vol dirs
 ARG DEV=false
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
@@ -31,7 +33,11 @@ RUN python -m venv /py && \
     adduser \
         --disabled-password \
         --no-create-home \
-        django-user
+        django-user && \
+    mkdir -p /vol/web/media && \
+    mkdir -p vol/web/static && \
+    chown -R django-user:django-user /vol && \
+    chmod -R 755 /vol 
 # Updates path enviroment variable so python commands dont need path extension
 ENV PATH="/py/bin:$PATH"
 
